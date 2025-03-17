@@ -3,6 +3,9 @@
   "module": "cli.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev-node": "NODE_TLS_REJECT_UNAUTHORIZED=0 npx tsx --env-file-if-exists .env cli.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
