@@ -1,6 +1,6 @@
 {
   "name": "vega6000",
-  "module": "index.ts",
+  "module": "cli.ts",
   "type": "module",
   "private": true,
   "devDependencies": {
@@ -8,5 +8,8 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7.4.0"
   }
 }
