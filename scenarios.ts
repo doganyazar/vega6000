@@ -16,6 +16,7 @@ interface MakeStreamOpts {
     codec: "aac_lc" | "ac3";
     bitrate?: number;
   }[];
+  scte104To35Conversion?: boolean;
   rtpPort: number;
 }
 
@@ -23,6 +24,7 @@ function makeStream({
   id,
   video: { codec, bitrate = 15000, imageSize = "1280,720" },
   audio,
+  scte104To35Conversion,
   rtpPort,
 }: MakeStreamOpts): StreamConfigInput {
   const audioConfig = audio.map(({ codec, bitrate = 64000 }) => ({
@@ -42,6 +44,7 @@ function makeStream({
         pixelFormat: "XV20",
       },
       audio: audioConfig,
+      scte104To35Conversion,
     },
     output: {
       url: `rtp://127.0.0.1:${rtpPort}`,
@@ -61,7 +64,8 @@ function makeSimilarStreams(opts: MakeStreamOpts, count: number) {
 
 export function Encode_Main(
   count: number,
-  videoCodec: VideoCodec
+  videoCodec: VideoCodec,
+  scte104To35Conversion?: boolean
 ): StreamConfigInput[] {
   const streams = makeSimilarStreams(
     {
@@ -72,6 +76,7 @@ export function Encode_Main(
         imageSize: "1280,720",
       },
       audio: [{ codec: "aac_lc" }],
+      scte104To35Conversion,
       rtpPort: 4010,
     },
     count
@@ -82,7 +87,8 @@ export function Encode_Main(
 
 export const Encode_Double_Stereo = (
   count: number,
-  videoCodec: VideoCodec
+  videoCodec: VideoCodec,
+  scte104To35Conversion?: boolean
 ): StreamConfigInput[] => {
   const streams = makeSimilarStreams(
     {
@@ -96,6 +102,7 @@ export const Encode_Double_Stereo = (
         { codec: "aac_lc", bitrate: 64000 },
         { codec: "ac3", bitrate: 48000 },
       ],
+      scte104To35Conversion,
       rtpPort: 4010,
     },
     count

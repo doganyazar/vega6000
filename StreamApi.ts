@@ -48,6 +48,7 @@ interface AudioConfig {
 interface EncodeConfig {
   video: VideoConfig;
   audio: AudioConfig[];
+  scte104To35Conversion?: boolean; // default: false
 }
 
 interface OutputConfig {
@@ -133,6 +134,7 @@ export class StreamAPI {
 
   private async configureEncoder(config: StreamConfig): Promise<void> {
     await this.configureVideoEncoder(config);
+    await this.configureScte(config);
     await this.configureAudioEncoder(config);
   }
 
@@ -183,6 +185,26 @@ export class StreamAPI {
         [fill("EncAudSrcStereo$1", [audioCodecIndex]), audioConfig.pair],
         [fill("AudBitRate$1", [audioCodecIndex]), audioConfig.bitrate],
         [fill("AudSampleRate$1", [audioCodecIndex]), audioConfig.sampleRate],
+      ]);
+    }
+
+    await this.sendCommand("av_input", Object.fromEntries(variableParams));
+  }
+
+  private async configureScte(config: StreamConfig): Promise<void> {
+    const {
+      id,
+      encoding: { scte104To35Conversion = false },
+    } = config;
+
+    let variableParams: (string | number)[][] = [
+      [fill("Channel$1AncEnable1", [id]), scte104To35Conversion ? "on" : "off"],
+    ];
+
+    if (scte104To35Conversion) {
+      variableParams = variableParams.concat([
+        [fill("Channel$1AncDID1", [id]), 577],
+        [fill("Channel$1AncSDID1", [id]), 263],
       ]);
     }
 
@@ -284,11 +306,22 @@ export class StreamAPI {
 
   public async disableStreams(ids: number | number[]): Promise<void> {
     const idsArray = Array.isArray(ids) ? ids : [ids];
-    const variableParams = idsArray.map((id) => [
+
+    // Turn off SCTE104 to 35
+    const avInputVariableParams = idsArray.map((id) => [
+      fill("Channel$1AncEnable1", [id]),
+      "off",
+    ]);
+    await this.sendCommand(
+      "av_input",
+      Object.fromEntries(avInputVariableParams)
+    );
+
+    const streamVariableParams = idsArray.map((id) => [
       fill("Channel$1Protocol1", [id]),
       "off",
     ]);
-    return this.sendCommand("stream", Object.fromEntries(variableParams));
+    return this.sendCommand("stream", Object.fromEntries(streamVariableParams));
   }
 
   public async reset(): Promise<void> {

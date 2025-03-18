@@ -35,9 +35,17 @@ const ScenarioMenu = {
       "Four H.264 15Mbps 4:2:2 10bit + for each stereo aac_lc 64kbps + four stereo ac3 32kbps",
     action: () => streamer.createStreams(Encode_Double_Stereo(4, "h264")),
   },
+  "test-suite-avc-main-with-scte": {
+    title: "Main scenario with SCTE-104 to SCTE-35",
+    action: () => streamer.createStreams(Encode_Main(4, "h264", true)),
+  },
   "test-suite-avc-single": {
     title: "Single H.264 15Mpbs 4:2:2 10bit aac_lc 64kbps",
     action: () => streamer.createStreams(Encode_Main(1, "h264")),
+  },
+  "test-suite-avc-single-with-scte": {
+    title: "Single scenario with SCTE-104 to SCTE-35",
+    action: () => streamer.createStreams(Encode_Main(1, "h264", true)),
   },
   "test-suite-hevc-main": {
     title: "Four H.265 15Mbps 4:2:2 10bit + four stereo aac_lc 64kbps for each",
@@ -48,13 +56,21 @@ const ScenarioMenu = {
       "Four H.265 15Mbps 4:2:2 10bit + for each stereo aac_lc 64kbps + four stereo ac3 32kbps",
     action: () => streamer.createStreams(Encode_Double_Stereo(4, "h265")),
   },
+  "test-suite-hevc-main-with-scte": {
+    title: "Main scenario with SCTE-104 to SCTE-35",
+    action: () => streamer.createStreams(Encode_Main(4, "h265", true)),
+  },
   "test-suite-hevc-single": {
     title: "Single H.265 15Mpbs 4:2:2 10bit aac_lc 64kbps",
     action: () => streamer.createStreams(Encode_Main(1, "h265")),
   },
+  "test-suite-hevc-single-with-scte": {
+    title: "Single scenario with SCTE-104 to SCTE-35",
+    action: () => streamer.createStreams(Encode_Main(1, "h265", true)),
+  },
 };
 
-async function commandWithTimeout(op: Promise<any>, timeout = 10000) {
+async function commandWithTimeout(op: Promise<any>, timeout = 20000) {
   await Promise.race([
     op.then(() => console.log("Command completed!\n")),
     new Promise((_, reject) => {
@@ -81,6 +97,8 @@ const MainMenuChoices = Object.entries(MainMenu).map(([key, value]) => ({
 
 const AllChoices = [...ScenarioChoices, ...MainMenuChoices];
 
+let defaultChoice = "";
+
 async function handleSelectMenu() {
   const answer = await select({
     message: `Select command (HOST: ${HOST})`,
@@ -91,12 +109,15 @@ async function handleSelectMenu() {
       ...MainMenuChoices,
     ],
     loop: false,
-    pageSize: 10,
+    default: defaultChoice,
+    pageSize: 25,
   });
 
   const chosen = AllChoices.find((choice) => choice.value === answer)!;
   await commandWithTimeout(chosen.action());
 
+  // Set default choice to quit after first command
+  defaultChoice = "quit";
   await handleSelectMenu();
 }
 
