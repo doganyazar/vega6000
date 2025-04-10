@@ -70,7 +70,7 @@ const ScenarioMenu = {
   },
 };
 
-async function commandWithTimeout(op: Promise<any>, timeout = 20000) {
+async function commandWithTimeout(op: Promise<any>, timeout = 30000) {
   await Promise.race([
     op.then(() => console.log("Command completed!\n")),
     new Promise((_, reject) => {
