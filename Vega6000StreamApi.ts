@@ -108,6 +108,7 @@ interface Vega6000StreamApiOpts {
     username: string;
     password: string;
   };
+  logRequests?: boolean;
 }
 interface HTTPRetryOpts {
   maxRetries: number;
@@ -302,34 +303,50 @@ export class Vega6000StreamApi {
     }
   }
 
-  public async disableStreams(ids: number | number[]): Promise<void> {
-    const idsArray = Array.isArray(ids) ? ids : [ids];
+  private async disableVideoEncoders(ids: number[]): Promise<void> {
+    const videoVariableParams = ids.map((id) => {
+      if (id === 1) return []; // first video encoder is always on
+      return [fillPattern("EncVidCodec$1", [id]), "off"];
+    });
+    await this.sendCommand("video", Object.fromEntries(videoVariableParams));
+  }
 
-    // Turn off SCTE104 to 35
-    const avInputVariableParams = idsArray.map((id) => [
-      fillPattern("Channel$1AncEnable1", [id]),
-      "off",
-    ]);
-    await this.sendCommand(
-      "av_input",
-      Object.fromEntries(avInputVariableParams)
-    );
+  private async disableAudioEncoders(ids: number[]): Promise<void> {
+    const audioVariableParams = ids.map((id) => {
+      return [fillPattern("EncAudCodec$1", [id]), "off"];
+    });
+    await this.sendCommand("av_input", Object.fromEntries(audioVariableParams));
+  }
 
-    const streamVariableParams = idsArray.map((id) => [
+  private async disableScteConversion(ids: number[]): Promise<void> {
+    const scteVariableParams = ids.map((id) => {
+      return [fillPattern("Channel$1AncEnable1", [id]), "off"];
+    });
+    await this.sendCommand("av_input", Object.fromEntries(scteVariableParams));
+  }
+
+  public async disableStreams(ids: number[]): Promise<void> {
+    const streamVariableParams = ids.map((id) => [
       fillPattern("Channel$1Protocol1", [id]),
       "off",
     ]);
-    return this.sendCommand("stream", Object.fromEntries(streamVariableParams));
+    await this.sendCommand("stream", Object.fromEntries(streamVariableParams));
+
+    await this.disableVideoEncoders(ids);
+    await this.disableScteConversion(ids);
   }
 
   public async reset(): Promise<void> {
     this.audioChannelCount = 0;
-    return this.disableStreams([1, 2, 3, 4]);
+    await this.disableStreams([1, 2, 3, 4]);
+    await this.disableAudioEncoders([1, 2, 3, 4, 5, 6, 7, 8]);
   }
 
   private async _get(path: string) {
     const url = `${this.opts.baseUrl}/command/${path}`;
-    console.log("GET", url);
+    if (this.opts.logRequests) {
+      console.log("GET", url);
+    }
 
     const response = await fetch(url, {
       method: "GET",

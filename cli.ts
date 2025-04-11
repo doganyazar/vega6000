@@ -146,6 +146,7 @@ async function handleMenu() {
       username: "root",
       password: PASSWORD,
     },
+    logRequests: true,
   });
 
   return handleSelectMenu();

@@ -43,6 +43,7 @@ export const formatIframeInterval = (gop?: GopConfig): string | undefined => {
   return `${bFrames},${gopLength},${idrInterval}`;
 };
 
+// ex: convert "Channel$1RTPAudio$2EncId1", [4,2] => "Channel4RTPAudio2EncId1"
 export function fillPattern(pattern: string, values: any[]): string {
   function checkPattern() {
     const vars = pattern.match(/\$[0-9]+/g) || [];
