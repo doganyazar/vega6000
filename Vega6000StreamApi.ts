@@ -1,4 +1,9 @@
-import { areSetsEqual, sleep } from "./utils";
+import {
+  fillPattern,
+  formatIframeInterval,
+  parseJSVarsTextToJson,
+  sleep,
+} from "./utils";
 
 export type AudioCodec = "aac_lc" | "aac_he" | "aac_hev2" | "ac3" | "mp2";
 export type VideoCodec = "h264" | "h265";
@@ -11,7 +16,7 @@ interface InputConfig {
   port: SDIPort;
 }
 
-interface GopConfig {
+export interface GopConfig {
   bFrames: number; // X: Number of B-frames between P-frames
   gopLength: number; // Y: GOP length (N)
   idrInterval: number; // Z: Number of GOPs between IDR frames
@@ -69,7 +74,7 @@ export type StreamConfigInput = Omit<StreamConfig, "input"> & {
   input?: InputConfig;
 };
 
-type CGI =
+export type CGI =
   | "system"
   | "av_input"
   | "video"
@@ -88,31 +93,6 @@ enum StreamProtocol {
 
 const SLEEP_AFTER_COMMAND = Number(process.env.SLEEP_AFTER_COMMAND) || 0;
 
-function fill(pattern: string, values: any[]): string {
-  function checkPattern() {
-    const vars = pattern.match(/\$[0-9]+/g) || [];
-    const count = vars.length;
-    const expectedVars = new Set(
-      new Array(count).fill(0).map((_, i) => `$${i + 1}`)
-    );
-
-    if (!areSetsEqual(new Set(vars), expectedVars)) {
-      throw new Error(`Invalid pattern: ${pattern}`);
-    }
-    if (count !== values.length) {
-      throw new Error(
-        `Number of values (${values.length}) does not match number of placeholders (${count})`
-      );
-    }
-  }
-
-  checkPattern();
-
-  return values.reduce((result, value, index) => {
-    return result.replace(`$${index + 1}`, value.toString());
-  }, pattern);
-}
-
 function applyDefaults(config: StreamConfigInput): StreamConfig {
   const { id } = config;
   const input = config.input || { interface: "sdi", port: id };
@@ -129,13 +109,6 @@ interface Vega6000StreamApiOpts {
     password: string;
   };
 }
-
-const formatIframeInterval = (gop?: GopConfig): string | undefined => {
-  if (!gop) return undefined;
-  const { bFrames, gopLength, idrInterval } = gop;
-  return `${bFrames},${gopLength},${idrInterval}`;
-};
-
 interface HTTPRetryOpts {
   maxRetries: number;
   retryDelay: number;
@@ -170,12 +143,12 @@ export class Vega6000StreamApi {
     } = config;
 
     const variableParams = [
-      [fill("EncVidCodec$1", [id]), video.codec],
-      [fill("EncVidCodecSrcId$1", [id]), input.port - 1], // SDI channel is 0-indexed
-      [fill("ImageSize$1", [id]), video.imageSize],
-      [fill("BitRate$1", [id]), video.bitrate],
-      [fill("IFrameInterval$1", [id]), formatIframeInterval(video.gop)],
-      [fill("PixelFormat$1", [id]), video.pixelFormat],
+      [fillPattern("EncVidCodec$1", [id]), video.codec],
+      [fillPattern("EncVidCodecSrcId$1", [id]), input.port - 1], // SDI channel is 0-indexed
+      [fillPattern("ImageSize$1", [id]), video.imageSize],
+      [fillPattern("BitRate$1", [id]), video.bitrate],
+      [fillPattern("IFrameInterval$1", [id]), formatIframeInterval(video.gop)],
+      [fillPattern("PixelFormat$1", [id]), video.pixelFormat],
     ];
 
     await this.sendCommand("video", Object.fromEntries(variableParams));
@@ -199,11 +172,14 @@ export class Vega6000StreamApi {
       }
 
       variableParams = variableParams.concat([
-        [fill("EncAudSrcId$1", [audioCodecIndex]), sdiIndex],
-        [fill("EncAudCodec$1", [audioCodecIndex]), audioConfig.codec],
-        [fill("EncAudSrcStereo$1", [audioCodecIndex]), audioConfig.pair],
-        [fill("AudBitRate$1", [audioCodecIndex]), audioConfig.bitrate],
-        [fill("AudSampleRate$1", [audioCodecIndex]), audioConfig.sampleRate],
+        [fillPattern("EncAudSrcId$1", [audioCodecIndex]), sdiIndex],
+        [fillPattern("EncAudCodec$1", [audioCodecIndex]), audioConfig.codec],
+        [fillPattern("EncAudSrcStereo$1", [audioCodecIndex]), audioConfig.pair],
+        [fillPattern("AudBitRate$1", [audioCodecIndex]), audioConfig.bitrate],
+        [
+          fillPattern("AudSampleRate$1", [audioCodecIndex]),
+          audioConfig.sampleRate,
+        ],
       ]);
     }
 
@@ -217,13 +193,16 @@ export class Vega6000StreamApi {
     } = config;
 
     let variableParams: (string | number)[][] = [
-      [fill("Channel$1AncEnable1", [id]), scte104To35Conversion ? "on" : "off"],
+      [
+        fillPattern("Channel$1AncEnable1", [id]),
+        scte104To35Conversion ? "on" : "off",
+      ],
     ];
 
     if (scte104To35Conversion) {
       variableParams = variableParams.concat([
-        [fill("Channel$1AncDID1", [id]), 577],
-        [fill("Channel$1AncSDID1", [id]), 263],
+        [fillPattern("Channel$1AncDID1", [id]), 577],
+        [fillPattern("Channel$1AncSDID1", [id]), 263],
       ]);
     }
 
@@ -245,17 +224,17 @@ export class Vega6000StreamApi {
         break;
       case "rtp:":
         variableParams = [
-          [fill("Channel$1Protocol1", [id]), StreamProtocol.TSoverRTP],
-          [fill("Channel$1RTPclientIP1", [id]), hostname],
-          [fill("Channel$1RTPclientPort1", [id]), port],
-          [fill("Channel$1RTPVideo1EncId1", [id]), id], // Video1: only 1 video in ts supported, use nth encoder for nth stream
-          [fill("Channel$1RTPVideoPid1", [id]), 100],
-          [fill("Channel$1RTPAudio1Pid1", [id]), 101],
-          [fill("Channel$1RTPAudio2Pid1", [id]), 102],
-          [fill("Channel$1RTPAudio3Pid1", [id]), 103],
-          [fill("Channel$1RTPAudio4Pid1", [id]), 104],
-          [fill("Channel$1RTPPcrPid1", [id]), 100],
-          [fill("Channel$1RTPPcrCheck1", [id]), 1],
+          [fillPattern("Channel$1Protocol1", [id]), StreamProtocol.TSoverRTP],
+          [fillPattern("Channel$1RTPclientIP1", [id]), hostname],
+          [fillPattern("Channel$1RTPclientPort1", [id]), port],
+          [fillPattern("Channel$1RTPVideo1EncId1", [id]), id], // Video1: only 1 video in ts supported, use nth encoder for nth stream
+          [fillPattern("Channel$1RTPVideoPid1", [id]), 100],
+          [fillPattern("Channel$1RTPAudio1Pid1", [id]), 101],
+          [fillPattern("Channel$1RTPAudio2Pid1", [id]), 102],
+          [fillPattern("Channel$1RTPAudio3Pid1", [id]), 103],
+          [fillPattern("Channel$1RTPAudio4Pid1", [id]), 104],
+          [fillPattern("Channel$1RTPPcrPid1", [id]), 100],
+          [fillPattern("Channel$1RTPPcrCheck1", [id]), 1],
         ];
 
         // Add audio encoding parameters - up to 4 channels supported, set them to 0 if not present
@@ -268,7 +247,7 @@ export class Vega6000StreamApi {
             : 0;
           variableParams.push([
             // shall match EncAudCodec[n] params
-            fill("Channel$1RTPAudio$2EncId1", [id, audioIndexPerStream]),
+            fillPattern("Channel$1RTPAudio$2EncId1", [id, audioIndexPerStream]),
             whichAudioCodec,
           ]);
         }
@@ -276,22 +255,22 @@ export class Vega6000StreamApi {
         break;
       case "udp:":
         variableParams = [
-          [fill("Channel$1Protocol1", [id]), StreamProtocol.TSoverIP],
-          [fill("Channel$1TSprotocol1", [id]), "udp"],
-          [fill("Channel$1TSclientIP1", [id]), hostname],
-          [fill("Channel$1TSclientPort1", [id]), port],
-          [fill("Channel$1TSTTL1", [id]), 64],
-          [fill("Channel$1TSVideoPid1", [id]), 100],
-          [fill("Channel$1TSAudioPid1", [id]), 101],
-          [fill("Channel$1TSAudio2Pid1", [id]), 102],
-          [fill("Channel$1TSAudio3Pid1", [id]), 103],
-          [fill("Channel$1TSAudio4Pid1", [id]), 104],
-          [fill("Channel$1TSPcrPid1", [id]), 100],
-          [fill("Channel$1TSPcrCheck1", [id]), 1],
-          [fill("Channel$1TSAudio1EncId1", [id]), 1],
-          [fill("Channel$1TSAudio2EncId1", [id]), 0],
-          [fill("Channel$1TSAudio3EncId1", [id]), 0],
-          [fill("Channel$1TSAudio4EncId1", [id]), 0],
+          [fillPattern("Channel$1Protocol1", [id]), StreamProtocol.TSoverIP],
+          [fillPattern("Channel$1TSprotocol1", [id]), "udp"],
+          [fillPattern("Channel$1TSclientIP1", [id]), hostname],
+          [fillPattern("Channel$1TSclientPort1", [id]), port],
+          [fillPattern("Channel$1TSTTL1", [id]), 64],
+          [fillPattern("Channel$1TSVideoPid1", [id]), 100],
+          [fillPattern("Channel$1TSAudioPid1", [id]), 101],
+          [fillPattern("Channel$1TSAudio2Pid1", [id]), 102],
+          [fillPattern("Channel$1TSAudio3Pid1", [id]), 103],
+          [fillPattern("Channel$1TSAudio4Pid1", [id]), 104],
+          [fillPattern("Channel$1TSPcrPid1", [id]), 100],
+          [fillPattern("Channel$1TSPcrCheck1", [id]), 1],
+          [fillPattern("Channel$1TSAudio1EncId1", [id]), 1],
+          [fillPattern("Channel$1TSAudio2EncId1", [id]), 0],
+          [fillPattern("Channel$1TSAudio3EncId1", [id]), 0],
+          [fillPattern("Channel$1TSAudio4EncId1", [id]), 0],
         ];
         break;
       case "srt:":
@@ -328,7 +307,7 @@ export class Vega6000StreamApi {
 
     // Turn off SCTE104 to 35
     const avInputVariableParams = idsArray.map((id) => [
-      fill("Channel$1AncEnable1", [id]),
+      fillPattern("Channel$1AncEnable1", [id]),
       "off",
     ]);
     await this.sendCommand(
@@ -337,7 +316,7 @@ export class Vega6000StreamApi {
     );
 
     const streamVariableParams = idsArray.map((id) => [
-      fill("Channel$1Protocol1", [id]),
+      fillPattern("Channel$1Protocol1", [id]),
       "off",
     ]);
     return this.sendCommand("stream", Object.fromEntries(streamVariableParams));
@@ -391,10 +370,15 @@ export class Vega6000StreamApi {
     throw new Error(`Max retries exceeded for GET ${path}: ${maxRetries}`);
   }
 
-  public async inquiry(resources: CGI[]): Promise<void> {
+  public async inquiry(resources: CGI[]): Promise<string> {
     const params = resources.map((resource) => `inqjs=${resource}`).join("&");
     const response = await this.get(`inquiry.cgi?${params}`);
-    console.log(response);
+    return response;
+  }
+
+  public async inquiryJson(resources: CGI[]): Promise<Record<string, string>> {
+    const response = await this.inquiry(resources);
+    return parseJSVarsTextToJson(response);
   }
 
   private async sendCommand(

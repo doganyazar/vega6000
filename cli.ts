@@ -1,10 +1,16 @@
 import { select, input, Separator } from "@inquirer/prompts";
-import { Vega6000StreamApi } from "./Vega6000StreamApi";
+import { Vega6000StreamApi, type CGI } from "./Vega6000StreamApi";
 import { Encode_Main, Encode_Double_Stereo } from "./scenarios";
 
 let HOST = process.env.HOST;
 let PASSWORD = process.env.PASSWORD;
 let streamer!: Vega6000StreamApi;
+
+// accept same input as streamer.inquiry
+async function printInquiry(resources: CGI[]) {
+  const response = await streamer.inquiry(resources);
+  console.log(response);
+}
 
 const MainMenu = {
   reset: {
@@ -17,15 +23,15 @@ const MainMenu = {
   },
   "inquiry-streams": {
     title: "Inquiry streams",
-    action: () => streamer.inquiry(["av_input", "video", "encode", "stream"]),
+    action: () => printInquiry(["av_input", "video", "encode", "stream"]),
   },
   "inquiry-video-input": {
     title: "Inquiry video input",
-    action: () => streamer.inquiry(["video_input_status"]),
+    action: () => printInquiry(["video_input_status"]),
   },
   "inquiry-system": {
     title: "Inquiry system",
-    action: () => streamer.inquiry(["system"]),
+    action: () => printInquiry(["system"]),
   },
 };
 
