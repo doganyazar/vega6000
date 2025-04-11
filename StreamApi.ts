@@ -128,6 +128,16 @@ const formatIframeInterval = (gop?: GopConfig): string | undefined => {
   return `${bFrames},${gopLength},${idrInterval}`;
 };
 
+interface HTTPRetryOpts {
+  maxRetries: number;
+  retryDelay: number;
+}
+
+const DefaultHTTPRetryOpts: HTTPRetryOpts = {
+  maxRetries: 5,
+  retryDelay: 1000,
+};
+
 export class StreamAPI {
   private audioChannelCount = 0;
   constructor(private opts: StreamAPIOpts) {}
@@ -329,7 +339,7 @@ export class StreamAPI {
     return this.disableStreams([1, 2, 3, 4]);
   }
 
-  private async get(path: string) {
+  private async _get(path: string) {
     const url = `${this.opts.baseUrl}/command/${path}`;
     console.log("GET", url);
 
@@ -350,6 +360,26 @@ export class StreamAPI {
     }
 
     return response.text();
+  }
+
+  private async get(path: string, opts?: HTTPRetryOpts): Promise<string> {
+    const { maxRetries, retryDelay } = opts || DefaultHTTPRetryOpts;
+
+    let retry = 0;
+
+    do {
+      try {
+        if (retry > 0) {
+          console.log(`Retrying ${path} (${retry}/${maxRetries})`);
+          await sleep(retryDelay);
+        }
+        return await this._get(path);
+      } catch (err: any) {
+        if (err.statusCode !== 503) throw err;
+      }
+    } while (retry++ < maxRetries);
+
+    throw new Error(`Max retries exceeded for GET ${path}: ${maxRetries}`);
   }
 
   public async inquiry(resources: CGI[]): Promise<void> {
