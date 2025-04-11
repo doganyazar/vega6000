@@ -61,6 +61,7 @@ export interface StreamConfig {
   input: InputConfig;
   encoding: EncodeConfig;
   output: OutputConfig;
+  noRePipeline?: boolean; // optimization to skip re_pipeline if not needed
 }
 
 // same with StreamConfig but input is optional
@@ -146,6 +147,12 @@ export class StreamAPI {
     await this.configureVideoEncoder(config);
     await this.configureScte(config);
     await this.configureAudioEncoder(config);
+
+    if (!config.noRePipeline) {
+      // re_pipeline is required to apply changes on video encoding
+      // API docs say this is part of "encode" module but it works on video too
+      await this.sendCommand("video", { re_pipeline: "on" });
+    }
   }
 
   private async configureVideoEncoder(config: StreamConfig): Promise<void> {
@@ -164,12 +171,7 @@ export class StreamAPI {
       [fill("PixelFormat$1", [id]), video.pixelFormat],
     ];
 
-    const params = {
-      ...Object.fromEntries(variableParams),
-      re_pipeline: "on", // API docs say this is part of "encode" module but it works here too
-    };
-
-    await this.sendCommand("video", params);
+    await this.sendCommand("video", Object.fromEntries(variableParams));
   }
 
   private async configureAudioEncoder(config: StreamConfig): Promise<void> {
