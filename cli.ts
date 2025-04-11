@@ -1,10 +1,10 @@
 import { select, input, Separator } from "@inquirer/prompts";
-import { StreamAPI } from "./StreamApi";
+import { Vega6000StreamApi } from "./Vega6000StreamApi";
 import { Encode_Main, Encode_Double_Stereo } from "./scenarios";
 
 let HOST = process.env.HOST;
 let PASSWORD = process.env.PASSWORD;
-let streamer!: StreamAPI;
+let streamer!: Vega6000StreamApi;
 
 const MainMenu = {
   reset: {
@@ -18,6 +18,10 @@ const MainMenu = {
   "inquiry-streams": {
     title: "Inquiry streams",
     action: () => streamer.inquiry(["av_input", "video", "encode", "stream"]),
+  },
+  "inquiry-video-input": {
+    title: "Inquiry video input",
+    action: () => streamer.inquiry(["video_input_status"]),
   },
   "inquiry-system": {
     title: "Inquiry system",
@@ -130,7 +134,7 @@ async function handleMenu() {
     PASSWORD = await input({ message: "Enter password", default: "321321" });
   }
 
-  streamer = new StreamAPI({
+  streamer = new Vega6000StreamApi({
     baseUrl: `http://${HOST}`,
     auth: {
       username: "root",

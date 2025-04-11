@@ -3,7 +3,7 @@ import {
   type SDIPort,
   type StreamConfigInput,
   type VideoCodec,
-} from "./StreamApi";
+} from "./Vega6000StreamApi";
 
 interface MakeStreamOpts {
   id: SDIPort;

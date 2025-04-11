@@ -69,7 +69,14 @@ export type StreamConfigInput = Omit<StreamConfig, "input"> & {
   input?: InputConfig;
 };
 
-type CGI = "system" | "av_input" | "video" | "encode" | "stream" | "misc";
+type CGI =
+  | "system"
+  | "av_input"
+  | "video"
+  | "encode"
+  | "stream"
+  | "video_input_status"
+  | "misc";
 
 enum StreamProtocol {
   TSoverIP = "TSoverIP",
@@ -115,7 +122,7 @@ function applyDefaults(config: StreamConfigInput): StreamConfig {
   };
 }
 
-interface StreamAPIOpts {
+interface Vega6000StreamApiOpts {
   baseUrl: string;
   auth: {
     username: string;
@@ -139,9 +146,9 @@ const DefaultHTTPRetryOpts: HTTPRetryOpts = {
   retryDelay: 1000,
 };
 
-export class StreamAPI {
+export class Vega6000StreamApi {
   private audioChannelCount = 0;
-  constructor(private opts: StreamAPIOpts) {}
+  constructor(private opts: Vega6000StreamApiOpts) {}
 
   private async configureEncoder(config: StreamConfig): Promise<void> {
     await this.configureVideoEncoder(config);
@@ -446,7 +453,7 @@ if (import.meta.main) {
   };
 
   const HOST = process.env.HOST || "127.0.0.1";
-  const streamer = new StreamAPI({
+  const streamer = new Vega6000StreamApi({
     baseUrl: `http://${HOST}`,
     auth: {
       username: "root",
