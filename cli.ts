@@ -3,6 +3,7 @@ import { Vega6000StreamApi, type CGI } from "./Vega6000StreamApi";
 import { Encode_Main, Encode_Double_Stereo } from "./scenarios";
 
 let HOST = process.env.HOST;
+let USERNAME = process.env.USERNAME;
 let PASSWORD = process.env.PASSWORD;
 let streamer!: Vega6000StreamApi;
 
@@ -136,14 +137,18 @@ async function handleMenu() {
     HOST = await input({ message: "Enter host", default: "127.0.0.1" });
   }
 
+  if (!USERNAME) {
+    USERNAME = await input({ message: "Enter username", default: "admin" });
+  }
+
   if (!PASSWORD) {
-    PASSWORD = await input({ message: "Enter password", default: "321321" });
+    PASSWORD = await input({ message: "Enter password", default: "vega1234" });
   }
 
   streamer = new Vega6000StreamApi({
     baseUrl: `https://${HOST}`,
     auth: {
-      username: "root",
+      username: USERNAME,
       password: PASSWORD,
     },
     logRequests: true,

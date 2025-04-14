@@ -103,7 +103,7 @@ function applyDefaults(config: StreamConfigInput): StreamConfig {
 
 interface Vega6000StreamApiOpts {
   baseUrl: string;
-  auth: {
+  auth?: {
     username: string;
     password: string;
   };
@@ -343,13 +343,16 @@ export class Vega6000StreamApi {
       console.log("GET", `"${url}"`);
     }
 
+    let headers: Record<string, string> = {};
+    if (this.opts.auth) {
+      headers["Authorization"] = `Basic ${btoa(
+        `${this.opts.auth.username}:${this.opts.auth.password}`
+      )}`;
+    }
+
     const response = await fetch(url, {
       method: "GET",
-      headers: {
-        Authorization: `Basic ${btoa(
-          `${this.opts.auth.username}:${this.opts.auth.password}`
-        )}`,
-      },
+      headers,
       // Somehow agent does not work with bun so instead setting tls option
       // @ts-expect-error - Bun-specific TLS options
       tls: { rejectUnauthorized: false },
