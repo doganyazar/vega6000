@@ -340,7 +340,7 @@ export class Vega6000StreamApi {
   private async _get(path: string) {
     const url = `${this.opts.baseUrl}/command/${path}`;
     if (this.opts.logRequests) {
-      console.log("GET", url);
+      console.log("GET", `"${url}"`);
     }
 
     const response = await fetch(url, {

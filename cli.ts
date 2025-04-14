@@ -141,7 +141,7 @@ async function handleMenu() {
   }
 
   streamer = new Vega6000StreamApi({
-    baseUrl: `http://${HOST}`,
+    baseUrl: `https://${HOST}`,
     auth: {
       username: "root",
       password: PASSWORD,
