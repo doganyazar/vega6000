@@ -228,7 +228,6 @@ export class Vega6000StreamApi {
           [fillPattern("Channel$1RTPAudio3Pid1", [id]), 103],
           [fillPattern("Channel$1RTPAudio4Pid1", [id]), 104],
           [fillPattern("Channel$1RTPPcrPid1", [id]), 100],
-          [fillPattern("Channel$1RTPPcrCheck1", [id]), 1],
         ];
 
         // Add audio encoding parameters - up to 4 channels supported, set them to 0 if not present
