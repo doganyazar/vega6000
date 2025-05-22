@@ -5,6 +5,9 @@ import {
   type VideoCodec,
 } from "./Vega6000StreamApi";
 
+const ENV_TARGET_IP = process.env.TARGET_IP;
+const ENV_PORT_BEGIN = parseInt(process.env.PORT_BEGIN || "", 10);
+
 interface MakeStreamOpts {
   id: SDIPort;
   video: {
@@ -17,7 +20,9 @@ interface MakeStreamOpts {
     bitrate?: number;
   }[];
   scte104To35Conversion?: boolean;
-  rtpPort: number;
+  targetIp?: string;
+  protocol?: "udp" | "rtp";
+  port: number;
 }
 
 function makeStream({
@@ -25,7 +30,9 @@ function makeStream({
   video: { codec, bitrate = 15000, imageSize = "1280,720" },
   audio,
   scte104To35Conversion,
-  rtpPort,
+  targetIp = "127.0.0.1",
+  protocol = "rtp",
+  port,
 }: MakeStreamOpts): StreamConfigInput {
   const audioConfig = audio.map(({ codec, bitrate = 64000 }) => ({
     codec,
@@ -47,7 +54,7 @@ function makeStream({
       scte104To35Conversion,
     },
     output: {
-      url: `rtp://127.0.0.1:${rtpPort}`,
+      url: `${protocol}://${targetIp}:${port}`,
     },
   };
 }
@@ -57,7 +64,8 @@ function makeSimilarStreams(opts: MakeStreamOpts, count: number) {
     return makeStream({
       ...opts,
       id: (i + 1) as SDIPort,
-      rtpPort: opts.rtpPort + i * 10,
+      targetIp: opts.targetIp || ENV_TARGET_IP,
+      port: opts.port + i * 10,
     });
   });
 }
@@ -88,7 +96,7 @@ export function Encode_Main(opts: EncodeScenarioOpts): StreamConfigInput[] {
       },
       audio: [{ codec: "aac_lc" }],
       scte104To35Conversion,
-      rtpPort: 4010,
+      port: ENV_PORT_BEGIN || 4010,
     },
     count
   );
@@ -119,7 +127,7 @@ export const Encode_Double_Stereo = (
         { codec: "ac3", bitrate: 48000 },
       ],
       scte104To35Conversion,
-      rtpPort: 4010,
+      port: ENV_PORT_BEGIN || 4010,
     },
     count
   );
