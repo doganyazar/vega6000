@@ -42,6 +42,18 @@ const ScenarioMenu = {
     action: () =>
       streamer.createStreams(Encode_Main({ count: 4, videoCodec: "h264" })),
   },
+  "test-suite-avc-1080p-15Mb": {
+    title: "Four H.264 15Mbps 4:2:2 10bit + four stereo aac_lc 64kbps for each",
+    action: () =>
+      streamer.createStreams(
+        Encode_Main({
+          count: 4,
+          videoCodec: "h264",
+          bitrate: 15000,
+          imageSize: "1920,1080",
+        })
+      ),
+  },
   "test-suite-avc-1080p-30Mb": {
     title: "Four H.264 30Mbps 4:2:2 10bit + four stereo aac_lc 64kbps for each",
     action: () =>
