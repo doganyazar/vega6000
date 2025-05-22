@@ -37,47 +37,109 @@ const MainMenu = {
 };
 
 const ScenarioMenu = {
-  "test-suite-avc-main": {
+  "test-suite-avc-720p": {
     title: "Four H.264 15Mbps 4:2:2 10bit + four stereo aac_lc 64kbps for each",
-    action: () => streamer.createStreams(Encode_Main(4, "h264")),
+    action: () =>
+      streamer.createStreams(Encode_Main({ count: 4, videoCodec: "h264" })),
   },
-  "test-suite-avc-double-stereo": {
+  "test-suite-avc-1080p-30Mb": {
+    title: "Four H.264 30Mbps 4:2:2 10bit + four stereo aac_lc 64kbps for each",
+    action: () =>
+      streamer.createStreams(
+        Encode_Main({
+          count: 4,
+          videoCodec: "h264",
+          bitrate: 30000,
+          imageSize: "1920,1080",
+        })
+      ),
+  },
+  "test-suite-avc-720p-double-stereo": {
     title:
       "Four H.264 15Mbps 4:2:2 10bit + for each stereo aac_lc 64kbps + four stereo ac3 32kbps",
-    action: () => streamer.createStreams(Encode_Double_Stereo(4, "h264")),
+    action: () =>
+      streamer.createStreams(
+        Encode_Double_Stereo({ count: 4, videoCodec: "h264" })
+      ),
   },
-  "test-suite-avc-main-with-scte": {
+  "test-suite-avc-720p-with-scte": {
     title: "Main scenario with SCTE-104 to SCTE-35",
-    action: () => streamer.createStreams(Encode_Main(4, "h264", true)),
+    action: () =>
+      streamer.createStreams(
+        Encode_Main({
+          count: 4,
+          videoCodec: "h264",
+          scte104To35Conversion: true,
+        })
+      ),
   },
-  "test-suite-avc-single": {
+  "test-suite-avc-720p-single": {
     title: "Single H.264 15Mpbs 4:2:2 10bit aac_lc 64kbps",
-    action: () => streamer.createStreams(Encode_Main(1, "h264")),
+    action: () =>
+      streamer.createStreams(Encode_Main({ count: 1, videoCodec: "h264" })),
   },
-  "test-suite-avc-single-with-scte": {
+  "test-suite-avc-720p-single-with-scte": {
     title: "Single scenario with SCTE-104 to SCTE-35",
-    action: () => streamer.createStreams(Encode_Main(1, "h264", true)),
+    action: () =>
+      streamer.createStreams(
+        Encode_Main({
+          count: 1,
+          videoCodec: "h264",
+          scte104To35Conversion: true,
+        })
+      ),
   },
-  "test-suite-hevc-main": {
+  "test-suite-hevc-720p": {
     title: "Four H.265 15Mbps 4:2:2 10bit + four stereo aac_lc 64kbps for each",
-    action: () => streamer.createStreams(Encode_Main(4, "h265")),
+    action: () =>
+      streamer.createStreams(Encode_Main({ count: 4, videoCodec: "h265" })),
   },
-  "test-suite-hevc-two-stereo": {
+  "test-suite-hevc-1080p-30Mb": {
+    title: "Four H.265 30Mbps 4:2:2 10bit + four stereo aac_lc 64kbps for each",
+    action: () =>
+      streamer.createStreams(
+        Encode_Main({
+          count: 4,
+          videoCodec: "h265",
+          bitrate: 30000,
+          imageSize: "1920,1080",
+        })
+      ),
+  },
+  "test-suite-hevc-720p-two-stereo": {
     title:
       "Four H.265 15Mbps 4:2:2 10bit + for each stereo aac_lc 64kbps + four stereo ac3 32kbps",
-    action: () => streamer.createStreams(Encode_Double_Stereo(4, "h265")),
+    action: () =>
+      streamer.createStreams(
+        Encode_Double_Stereo({ count: 4, videoCodec: "h265" })
+      ),
   },
-  "test-suite-hevc-main-with-scte": {
+  "test-suite-hevc-720p-with-scte": {
     title: "Main scenario with SCTE-104 to SCTE-35",
-    action: () => streamer.createStreams(Encode_Main(4, "h265", true)),
+    action: () =>
+      streamer.createStreams(
+        Encode_Main({
+          count: 4,
+          videoCodec: "h265",
+          scte104To35Conversion: true,
+        })
+      ),
   },
-  "test-suite-hevc-single": {
+  "test-suite-hevc-720p-single": {
     title: "Single H.265 15Mpbs 4:2:2 10bit aac_lc 64kbps",
-    action: () => streamer.createStreams(Encode_Main(1, "h265")),
+    action: () =>
+      streamer.createStreams(Encode_Main({ count: 1, videoCodec: "h265" })),
   },
-  "test-suite-hevc-single-with-scte": {
+  "test-suite-hevc-720p-single-with-scte": {
     title: "Single scenario with SCTE-104 to SCTE-35",
-    action: () => streamer.createStreams(Encode_Main(1, "h265", true)),
+    action: () =>
+      streamer.createStreams(
+        Encode_Main({
+          count: 1,
+          videoCodec: "h265",
+          scte104To35Conversion: true,
+        })
+      ),
   },
 };
 

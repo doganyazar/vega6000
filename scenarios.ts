@@ -62,18 +62,29 @@ function makeSimilarStreams(opts: MakeStreamOpts, count: number) {
   });
 }
 
-export function Encode_Main(
-  count: number,
-  videoCodec: VideoCodec,
-  scte104To35Conversion?: boolean
-): StreamConfigInput[] {
+interface EncodeScenarioOpts {
+  count: number;
+  videoCodec: VideoCodec;
+  bitrate?: number;
+  imageSize?: ImageSize;
+  scte104To35Conversion?: boolean;
+}
+
+export function Encode_Main(opts: EncodeScenarioOpts): StreamConfigInput[] {
+  const {
+    count,
+    videoCodec,
+    bitrate = 15000,
+    imageSize = "1280,720",
+    scte104To35Conversion,
+  } = opts;
   const streams = makeSimilarStreams(
     {
       id: 1,
       video: {
         codec: videoCodec,
-        bitrate: 15000,
-        imageSize: "1280,720",
+        bitrate,
+        imageSize,
       },
       audio: [{ codec: "aac_lc" }],
       scte104To35Conversion,
@@ -86,17 +97,22 @@ export function Encode_Main(
 }
 
 export const Encode_Double_Stereo = (
-  count: number,
-  videoCodec: VideoCodec,
-  scte104To35Conversion?: boolean
+  opts: EncodeScenarioOpts
 ): StreamConfigInput[] => {
+  const {
+    count,
+    videoCodec,
+    bitrate = 15000,
+    imageSize = "1280,720",
+    scte104To35Conversion,
+  } = opts;
   const streams = makeSimilarStreams(
     {
       id: 1,
       video: {
         codec: videoCodec,
-        bitrate: 15000,
-        imageSize: "1280,720",
+        bitrate,
+        imageSize,
       },
       audio: [
         { codec: "aac_lc", bitrate: 64000 },
