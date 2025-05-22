@@ -63,6 +63,7 @@ interface OutputConfig {
 
 export interface StreamConfig {
   id: SDIPort;
+  name?: string;
   input: InputConfig;
   encoding: EncodeConfig;
   output: OutputConfig;
@@ -206,6 +207,7 @@ export class Vega6000StreamApi {
   private async configureOutput(config: StreamConfig): Promise<void> {
     const {
       id,
+      name,
       encoding: { audio },
       output,
     } = config;
@@ -218,6 +220,7 @@ export class Vega6000StreamApi {
         break;
       case "rtp:":
         variableParams = [
+          [fillPattern("Channel$1Name1", [id]), name || `Stream-${id}`],
           [fillPattern("Channel$1Protocol1", [id]), StreamProtocol.TSoverRTP],
           [fillPattern("Channel$1RTPclientIP1", [id]), hostname],
           [fillPattern("Channel$1RTPclientPort1", [id]), port],
@@ -248,6 +251,7 @@ export class Vega6000StreamApi {
         break;
       case "udp:":
         variableParams = [
+          [fillPattern("Channel$1Name1", [id]), name || `Stream-${id}`],
           [fillPattern("Channel$1Protocol1", [id]), StreamProtocol.TSoverIP],
           [fillPattern("Channel$1TSprotocol1", [id]), "udp"],
           [fillPattern("Channel$1TSclientIP1", [id]), hostname],
