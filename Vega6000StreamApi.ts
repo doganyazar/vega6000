@@ -22,6 +22,8 @@ export interface GopConfig {
   idrInterval: number; // Z: Number of GOPs between IDR frames
 }
 
+export type PixelFormat = "NV12" | "NV16" | "XV15" | "XV20";
+
 interface VideoConfig {
   codec: VideoCodecWithOff;
   imageSize: ImageSize;
@@ -32,7 +34,7 @@ interface VideoConfig {
   // NV16: 4:2:0 10bit
   // XV15: 4:2:2 8bit
   // XV20: 4:2:2 10bit
-  pixelFormat?: "NV12" | "NV16" | "XV15" | "XV20";
+  pixelFormat?: PixelFormat; // default: "XV20"
 }
 
 interface AudioConfig {

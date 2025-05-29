@@ -153,6 +153,18 @@ const ScenarioMenu = {
         })
       ),
   },
+  "test-suite-avc-1080p-30Mb-single": {
+    title: "Single H.264 30Mbps 4:2:2 10bit aac_lc 64kbps",
+    action: () =>
+      streamer.createStreams(
+        Encode_Main({
+          count: 1,
+          videoCodec: "h264",
+          bitrate: 30000,
+          imageSize: "1920,1080",
+        })
+      ),
+  },
 };
 
 async function commandWithTimeout(op: Promise<any>, timeout = 30000) {

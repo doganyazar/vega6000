@@ -1,5 +1,6 @@
 import {
   type ImageSize,
+  type PixelFormat,
   type SDIPort,
   type StreamConfigInput,
   type VideoCodec,
@@ -7,6 +8,7 @@ import {
 
 const ENV_TARGET_IP = process.env.TARGET_IP;
 const ENV_PORT_BEGIN = parseInt(process.env.PORT_BEGIN || "", 10);
+const ENV_PIXEL_FORMAT = process.env.PIXEL_FORMAT as PixelFormat;
 
 interface MakeStreamOpts {
   id: SDIPort;
@@ -14,6 +16,7 @@ interface MakeStreamOpts {
     codec: VideoCodec;
     bitrate?: number;
     imageSize?: ImageSize;
+    pixelFormat?: PixelFormat;
   };
   audio: {
     codec: "aac_lc" | "ac3";
@@ -27,7 +30,12 @@ interface MakeStreamOpts {
 
 function makeStream({
   id,
-  video: { codec, bitrate = 15000, imageSize = "1280,720" },
+  video: {
+    codec,
+    bitrate = 15000,
+    imageSize = "1280,720",
+    pixelFormat = "XV20",
+  },
   audio,
   scte104To35Conversion,
   targetIp = "127.0.0.1",
@@ -48,7 +56,7 @@ function makeStream({
         codec,
         bitrate,
         imageSize,
-        pixelFormat: "XV20",
+        pixelFormat,
       },
       audio: audioConfig,
       scte104To35Conversion,
@@ -76,6 +84,7 @@ interface EncodeScenarioOpts {
   bitrate?: number;
   imageSize?: ImageSize;
   scte104To35Conversion?: boolean;
+  pixelFormat?: PixelFormat;
 }
 
 export function Encode_Main(opts: EncodeScenarioOpts): StreamConfigInput[] {
@@ -85,6 +94,7 @@ export function Encode_Main(opts: EncodeScenarioOpts): StreamConfigInput[] {
     bitrate = 15000,
     imageSize = "1280,720",
     scte104To35Conversion,
+    pixelFormat = ENV_PIXEL_FORMAT,
   } = opts;
   const streams = makeSimilarStreams(
     {
@@ -93,6 +103,7 @@ export function Encode_Main(opts: EncodeScenarioOpts): StreamConfigInput[] {
         codec: videoCodec,
         bitrate,
         imageSize,
+        pixelFormat,
       },
       audio: [{ codec: "aac_lc" }],
       scte104To35Conversion,
@@ -113,6 +124,7 @@ export const Encode_Double_Stereo = (
     bitrate = 15000,
     imageSize = "1280,720",
     scte104To35Conversion,
+    pixelFormat = ENV_PIXEL_FORMAT,
   } = opts;
   const streams = makeSimilarStreams(
     {
@@ -121,6 +133,7 @@ export const Encode_Double_Stereo = (
         codec: videoCodec,
         bitrate,
         imageSize,
+        pixelFormat,
       },
       audio: [
         { codec: "aac_lc", bitrate: 64000 },
