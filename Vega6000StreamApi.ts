@@ -59,8 +59,8 @@ interface EncodeConfig {
 }
 
 interface OutputConfig {
-  // only "RTMP" | "RTP" | "UDP" | "SRT" supported
-  url: string; // e.g. rtmp://server/live
+  // "RTP" | "UDP" | "SRT" supported
+  url: string; // e.g. rtp://127.0.0.1:3010/stream
 }
 
 export interface StreamConfig {
@@ -213,13 +213,28 @@ export class Vega6000StreamApi {
       encoding: { audio },
       output,
     } = config;
-    const { hostname, port, protocol } = new URL(output.url);
+    const parsedUrl = new URL(output.url);
+    const { hostname, port, protocol, searchParams } = parsedUrl;
     let variableParams: Array<[string, any]> = [];
 
+    const fillAudioEncPatterns = (audioPattern: string) => {
+      // Add audio encoding parameters - up to 4 channels supported, set them to 0 if not present
+      for (let i = 0; i < 4; i++) {
+        // supports up to 4 audio channels
+        const audioConfig = audio[i];
+        const audioIndexPerStream = i + 1;
+        const whichAudioCodec = audioConfig
+          ? audioIndexPerStream + this.audioChannelCount
+          : 0;
+        variableParams.push([
+          // shall match EncAudCodec[n] params
+          fillPattern(audioPattern, [id, audioIndexPerStream]),
+          whichAudioCodec,
+        ]);
+      }
+    };
+
     switch (protocol) {
-      case "rtmp:":
-        // TODO: implement
-        break;
       case "rtp:":
         variableParams = [
           [fillPattern("Channel$1Name1", [id]), name || `Stream-${id}`],
@@ -234,22 +249,7 @@ export class Vega6000StreamApi {
           [fillPattern("Channel$1RTPAudio4Pid1", [id]), 104],
           [fillPattern("Channel$1RTPPcrPid1", [id]), 100],
         ];
-
-        // Add audio encoding parameters - up to 4 channels supported, set them to 0 if not present
-        for (let i = 0; i < 4; i++) {
-          // supports up to 4 audio channels
-          const audioConfig = audio[i];
-          const audioIndexPerStream = i + 1;
-          const whichAudioCodec = audioConfig
-            ? audioIndexPerStream + this.audioChannelCount
-            : 0;
-          variableParams.push([
-            // shall match EncAudCodec[n] params
-            fillPattern("Channel$1RTPAudio$2EncId1", [id, audioIndexPerStream]),
-            whichAudioCodec,
-          ]);
-        }
-
+        fillAudioEncPatterns("Channel$1RTPAudio$2EncId1");
         break;
       case "udp:":
         variableParams = [
@@ -266,14 +266,31 @@ export class Vega6000StreamApi {
           [fillPattern("Channel$1TSAudio4Pid1", [id]), 104],
           [fillPattern("Channel$1TSPcrPid1", [id]), 100],
           [fillPattern("Channel$1TSPcrCheck1", [id]), 1],
-          [fillPattern("Channel$1TSAudio1EncId1", [id]), 1],
-          [fillPattern("Channel$1TSAudio2EncId1", [id]), 0],
-          [fillPattern("Channel$1TSAudio3EncId1", [id]), 0],
-          [fillPattern("Channel$1TSAudio4EncId1", [id]), 0],
         ];
+        fillAudioEncPatterns("Channel$1TSAudio$2EncId1");
         break;
       case "srt:":
-        // TODO: implement
+        const mode = searchParams.get("mode") || "caller";
+        const latency = parseInt(searchParams.get("latency") as string) || 1000; // default latency in ms
+        searchParams.delete("mode");
+        searchParams.delete("latency");
+        const srtUrlWithoutMode = parsedUrl.href;
+
+        variableParams = [
+          [fillPattern("Channel$1Name1", [id]), name || `Stream-${id}`],
+          [fillPattern("Channel$1Protocol1", [id]), StreamProtocol.SRT],
+          [fillPattern("Channel$1SRTMode1", [id]), mode],
+          [fillPattern("Channel$1SRTUrl1", [id]), srtUrlWithoutMode],
+          [fillPattern("Channel$1SRTToS1", [id]), 10], // Type of Service: 10 = AF11
+          [fillPattern("Channel$1SRTTTL1", [id]), 10], // Time To Live (max # of router hops)
+          [fillPattern("Channel$1SRTBandwidthOverhead1", [id]), 20], // extra bandwidth for error correction
+          [fillPattern("Channel$1SRTMTU1", [id]), 1500], // max packet size
+          [fillPattern("Channel$1SRTLatency1", [id]), latency], // buffer time in ms
+          [fillPattern("Channel$1SRTEncryption1", [id]), "none"], // none", "AES-128", "AES-192", "AES-256"
+          [fillPattern("Channel$1SRTEncryptionKey1", [id]), ""],
+          [fillPattern("Channel$1SRTVideo1EncId1", [id]), id],
+        ];
+        fillAudioEncPatterns("Channel$1SRTAudio$2EncId1");
         break;
       default:
         throw new Error(`Unsupported protocol: ${protocol}`);

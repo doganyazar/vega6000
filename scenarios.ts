@@ -9,6 +9,8 @@ import {
 const ENV_TARGET_IP = process.env.TARGET_IP;
 const ENV_PORT_BEGIN = parseInt(process.env.PORT_BEGIN || "", 10);
 const ENV_PIXEL_FORMAT = process.env.PIXEL_FORMAT as PixelFormat;
+const ENV_PROTOCOL = process.env.PROTOCOL as "udp" | "rtp" | "srt";
+const ENV_SRT_MODE = process.env.SRT_MODE;
 
 const DEFAULT_AUDITO_BITRATE = 48000;
 const DEFAULT_AUDIO_SAMPLE_RATE = 48000;
@@ -27,7 +29,7 @@ interface MakeStreamOpts {
   }[];
   scte104To35Conversion?: boolean;
   targetIp?: string;
-  protocol?: "udp" | "rtp";
+  protocol?: "udp" | "rtp" | "srt";
   port: number;
 }
 
@@ -54,6 +56,11 @@ function makeStream({
     })
   );
 
+  const url = new URL(`${protocol}://${targetIp}:${port}`);
+  if (ENV_SRT_MODE) {
+    url.searchParams.set("mode", ENV_SRT_MODE);
+  }
+
   return {
     id,
     encoding: {
@@ -67,7 +74,7 @@ function makeStream({
       scte104To35Conversion,
     },
     output: {
-      url: `${protocol}://${targetIp}:${port}`,
+      url: url.href,
     },
   };
 }
@@ -113,6 +120,7 @@ export function Encode_Main(opts: EncodeScenarioOpts): StreamConfigInput[] {
       audio: [{ codec: "aac_lc" }],
       scte104To35Conversion,
       port: ENV_PORT_BEGIN || 4010,
+      protocol: ENV_PROTOCOL || "rtp",
     },
     count
   );
