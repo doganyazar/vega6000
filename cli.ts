@@ -42,6 +42,33 @@ const ScenarioMenu = {
     action: () =>
       streamer.createStreams(Encode_Main({ count: 4, videoCodec: "h264" })),
   },
+  "test-suite-avc-720p-double-stereo": {
+    title:
+      "Four H.264 15Mbps 4:2:2 10bit + for each stereo aac_lc 48kbps + four stereo ac3 48kbps",
+    action: () =>
+      streamer.createStreams(
+        Encode_Double_Stereo({ count: 4, videoCodec: "h264" })
+      ),
+  },
+  "test-suite-avc-720p-30Mb-double-stereo": {
+    title:
+      "Four H.264 30Mbps 4:2:2 10bit + for each stereo aac_lc 48kbps + four stereo ac3 48kbps",
+    action: () =>
+      streamer.createStreams(
+        Encode_Double_Stereo({ count: 4, videoCodec: "h264", bitrate: 30000 })
+      ),
+  },
+  "test-suite-avc-720p-with-scte": {
+    title: "Main scenario with SCTE-104 to SCTE-35",
+    action: () =>
+      streamer.createStreams(
+        Encode_Main({
+          count: 4,
+          videoCodec: "h264",
+          scte104To35Conversion: true,
+        })
+      ),
+  },
   "test-suite-avc-1080p-15Mb": {
     title: "Four H.264 15Mbps 4:2:2 10bit + four stereo aac_lc 64kbps for each",
     action: () =>
@@ -66,22 +93,16 @@ const ScenarioMenu = {
         })
       ),
   },
-  "test-suite-avc-720p-double-stereo": {
+  "test-suite-avc-1080p-30Mb-double-stereo": {
     title:
-      "Four H.264 15Mbps 4:2:2 10bit + for each stereo aac_lc 64kbps + four stereo ac3 32kbps",
+      "Four H.264 30Mbps 4:2:2 10bit + for each stereo aac_lc 48kbps + four stereo ac3 48kbps",
     action: () =>
       streamer.createStreams(
-        Encode_Double_Stereo({ count: 4, videoCodec: "h264" })
-      ),
-  },
-  "test-suite-avc-720p-with-scte": {
-    title: "Main scenario with SCTE-104 to SCTE-35",
-    action: () =>
-      streamer.createStreams(
-        Encode_Main({
+        Encode_Double_Stereo({
           count: 4,
           videoCodec: "h264",
-          scte104To35Conversion: true,
+          bitrate: 30000,
+          imageSize: "1920,1080",
         })
       ),
   },
@@ -101,21 +122,31 @@ const ScenarioMenu = {
         })
       ),
   },
+  "test-suite-avc-1080p-30Mb-single": {
+    title: "Single H.264 30Mbps 4:2:2 10bit aac_lc 64kbps",
+    action: () =>
+      streamer.createStreams(
+        Encode_Main({
+          count: 1,
+          videoCodec: "h264",
+          bitrate: 30000,
+          imageSize: "1920,1080",
+        })
+      ),
+  },
+
+  // HEVC Scenarios
   "test-suite-hevc-720p": {
     title: "Four H.265 15Mbps 4:2:2 10bit + four stereo aac_lc 64kbps for each",
     action: () =>
       streamer.createStreams(Encode_Main({ count: 4, videoCodec: "h265" })),
   },
-  "test-suite-hevc-1080p-30Mb": {
-    title: "Four H.265 30Mbps 4:2:2 10bit + four stereo aac_lc 64kbps for each",
+  "test-suite-hevc-720p-30Mb-double-stereo": {
+    title:
+      "Four H.265 30Mbps 4:2:2 10bit + for each stereo aac_lc 48kbps + four stereo ac3 48kbps",
     action: () =>
       streamer.createStreams(
-        Encode_Main({
-          count: 4,
-          videoCodec: "h265",
-          bitrate: 30000,
-          imageSize: "1920,1080",
-        })
+        Encode_Double_Stereo({ count: 4, videoCodec: "h265", bitrate: 30000 })
       ),
   },
   "test-suite-hevc-720p-two-stereo": {
@@ -137,6 +168,43 @@ const ScenarioMenu = {
         })
       ),
   },
+  "test-suite-hevc-1080p-20Mb": {
+    title: "Four H.265 30Mbps 4:2:2 10bit + four stereo aac_lc 64kbps for each",
+    action: () =>
+      streamer.createStreams(
+        Encode_Main({
+          count: 4,
+          videoCodec: "h265",
+          bitrate: 20000,
+          imageSize: "1920,1080",
+        })
+      ),
+  },
+  "test-suite-hevc-1080p-30Mb": {
+    title: "Four H.265 30Mbps 4:2:2 10bit + four stereo aac_lc 64kbps for each",
+    action: () =>
+      streamer.createStreams(
+        Encode_Main({
+          count: 4,
+          videoCodec: "h265",
+          bitrate: 30000,
+          imageSize: "1920,1080",
+        })
+      ),
+  },
+  "test-suite-hevc-1080p-30Mb-double-stereo": {
+    title:
+      "Four H.265 30Mbps 4:2:2 10bit + for each stereo aac_lc 48kbps + four stereo ac3 48kbps",
+    action: () =>
+      streamer.createStreams(
+        Encode_Double_Stereo({
+          count: 4,
+          videoCodec: "h265",
+          bitrate: 30000,
+          imageSize: "1920,1080",
+        })
+      ),
+  },
   "test-suite-hevc-720p-single": {
     title: "Single H.265 15Mpbs 4:2:2 10bit aac_lc 64kbps",
     action: () =>
@@ -150,18 +218,6 @@ const ScenarioMenu = {
           count: 1,
           videoCodec: "h265",
           scte104To35Conversion: true,
-        })
-      ),
-  },
-  "test-suite-avc-1080p-30Mb-single": {
-    title: "Single H.264 30Mbps 4:2:2 10bit aac_lc 64kbps",
-    action: () =>
-      streamer.createStreams(
-        Encode_Main({
-          count: 1,
-          videoCodec: "h264",
-          bitrate: 30000,
-          imageSize: "1920,1080",
         })
       ),
   },

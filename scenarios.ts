@@ -10,6 +10,9 @@ const ENV_TARGET_IP = process.env.TARGET_IP;
 const ENV_PORT_BEGIN = parseInt(process.env.PORT_BEGIN || "", 10);
 const ENV_PIXEL_FORMAT = process.env.PIXEL_FORMAT as PixelFormat;
 
+const DEFAULT_AUDITO_BITRATE = 48000;
+const DEFAULT_AUDIO_SAMPLE_RATE = 48000;
+
 interface MakeStreamOpts {
   id: SDIPort;
   video: {
@@ -42,12 +45,14 @@ function makeStream({
   protocol = "rtp",
   port,
 }: MakeStreamOpts): StreamConfigInput {
-  const audioConfig = audio.map(({ codec, bitrate = 64000 }) => ({
-    codec,
-    bitrate,
-    sampleRate: 48000,
-    pair: 1 as const,
-  }));
+  const audioConfig = audio.map(
+    ({ codec, bitrate = DEFAULT_AUDITO_BITRATE }) => ({
+      codec,
+      bitrate,
+      sampleRate: DEFAULT_AUDIO_SAMPLE_RATE,
+      pair: 1 as const,
+    })
+  );
 
   return {
     id,
@@ -135,10 +140,7 @@ export const Encode_Double_Stereo = (
         imageSize,
         pixelFormat,
       },
-      audio: [
-        { codec: "aac_lc", bitrate: 64000 },
-        { codec: "ac3", bitrate: 48000 },
-      ],
+      audio: [{ codec: "aac_lc" }, { codec: "aac_lc" }],
       scte104To35Conversion,
       port: ENV_PORT_BEGIN || 4010,
     },
