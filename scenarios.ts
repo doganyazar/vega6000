@@ -6,11 +6,13 @@ import {
   type VideoCodec,
 } from "./Vega6000StreamApi";
 
-const ENV_TARGET_IP = process.env.TARGET_IP;
 const ENV_PORT_BEGIN = parseInt(process.env.PORT_BEGIN || "", 10);
 const ENV_PIXEL_FORMAT = process.env.PIXEL_FORMAT as PixelFormat;
 const ENV_PROTOCOL = process.env.PROTOCOL as "udp" | "rtp" | "srt";
 const ENV_SRT_MODE = process.env.SRT_MODE;
+const ENV_TARGET_IP =
+  process.env.TARGET_IP ||
+  (ENV_SRT_MODE === "listener" ? process.env.HOST : ""); // if srt is enabled in listener mode, use HOST as target IP
 
 const DEFAULT_AUDITO_BITRATE = 48000;
 const DEFAULT_AUDIO_SAMPLE_RATE = 48000;
@@ -108,6 +110,9 @@ export function Encode_Main(opts: EncodeScenarioOpts): StreamConfigInput[] {
     scte104To35Conversion,
     pixelFormat = ENV_PIXEL_FORMAT,
   } = opts;
+
+  const protocol = ENV_PROTOCOL || ENV_SRT_MODE ? "srt" : "rtp";
+
   const streams = makeSimilarStreams(
     {
       id: 1,
@@ -120,7 +125,7 @@ export function Encode_Main(opts: EncodeScenarioOpts): StreamConfigInput[] {
       audio: [{ codec: "aac_lc" }],
       scte104To35Conversion,
       port: ENV_PORT_BEGIN || 4010,
-      protocol: ENV_PROTOCOL || "rtp",
+      protocol,
     },
     count
   );

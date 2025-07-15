@@ -382,7 +382,10 @@ export class Vega6000StreamApi {
     });
 
     if (!response.ok) {
-      throw new Error(`Command failed for ${path} - ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(
+        `Command failed for ${path}: ${response.statusText} ${errorText}`
+      );
     }
 
     return response.text();
