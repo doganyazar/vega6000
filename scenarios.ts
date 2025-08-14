@@ -144,6 +144,9 @@ export const Encode_Double_Stereo = (
     scte104To35Conversion,
     pixelFormat = ENV_PIXEL_FORMAT,
   } = opts;
+
+  const protocol = ENV_PROTOCOL || ENV_SRT_MODE ? "srt" : "rtp";
+
   const streams = makeSimilarStreams(
     {
       id: 1,
@@ -156,6 +159,7 @@ export const Encode_Double_Stereo = (
       audio: [{ codec: "aac_lc" }, { codec: "aac_lc" }],
       scte104To35Conversion,
       port: ENV_PORT_BEGIN || 4010,
+      protocol,
     },
     count
   );
