@@ -31,8 +31,8 @@ interface VideoConfig {
   gop?: GopConfig;
   rateControl?: "CBR" | "VBR" | "CVBR" | "low-latency";
   // NV12: 4:2:0 8bit
-  // NV16: 4:2:0 10bit
-  // XV15: 4:2:2 8bit
+  // NV16: 4:2:2 8bit
+  // XV15: 4:2:0 10bit
   // XV20: 4:2:2 10bit
   pixelFormat?: PixelFormat; // default: "XV20"
 }
